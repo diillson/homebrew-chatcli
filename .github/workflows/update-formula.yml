@@ -1,0 +1,107 @@
+name: Update Homebrew Formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g., v1.9.0)"
+        required: true
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout tap repository
+        uses: actions/checkout@v4
+
+      - name: Download release assets and compute SHA256
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          VER="${VERSION#v}"
+
+          echo "Downloading binaries for v${VER}..."
+
+          curl -sL -o chatcli-darwin-arm64 \
+            "https://github.com/diillson/chatcli/releases/download/v${VER}/chatcli-darwin-arm64"
+          curl -sL -o chatcli-darwin-amd64 \
+            "https://github.com/diillson/chatcli/releases/download/v${VER}/chatcli-darwin-amd64"
+          curl -sL -o chatcli-linux-amd64 \
+            "https://github.com/diillson/chatcli/releases/download/v${VER}/chatcli-linux-amd64"
+
+          SHA_DARWIN_ARM64=$(sha256sum chatcli-darwin-arm64 | awk '{print $1}')
+          SHA_DARWIN_AMD64=$(sha256sum chatcli-darwin-amd64 | awk '{print $1}')
+          SHA_LINUX_AMD64=$(sha256sum chatcli-linux-amd64 | awk '{print $1}')
+
+          echo "SHA256 darwin-arm64: ${SHA_DARWIN_ARM64}"
+          echo "SHA256 darwin-amd64: ${SHA_DARWIN_AMD64}"
+          echo "SHA256 linux-amd64:  ${SHA_LINUX_AMD64}"
+
+          echo "SHA_DARWIN_ARM64=${SHA_DARWIN_ARM64}" >> "$GITHUB_ENV"
+          echo "SHA_DARWIN_AMD64=${SHA_DARWIN_AMD64}" >> "$GITHUB_ENV"
+          echo "SHA_LINUX_AMD64=${SHA_LINUX_AMD64}" >> "$GITHUB_ENV"
+          echo "VER=${VER}" >> "$GITHUB_ENV"
+
+      - name: Update formula
+        run: |
+          set -euo pipefail
+          cat > Formula/chatcli.rb << FORMULA
+          # typed: false
+          # frozen_string_literal: true
+
+          # Homebrew formula for ChatCLI
+          # Repository: https://github.com/diillson/chatcli
+          class Chatcli < Formula
+            desc "Command-line interface for interacting with multiple LLM providers"
+            homepage "https://chatcli.ai"
+            license "Apache-2.0"
+            version "${VER}"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-darwin-arm64"
+                sha256 "${SHA_DARWIN_ARM64}"
+
+                def install
+                  bin.install "chatcli-darwin-arm64" => "chatcli"
+                end
+              elsif Hardware::CPU.intel?
+                url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-darwin-amd64"
+                sha256 "${SHA_DARWIN_AMD64}"
+
+                def install
+                  bin.install "chatcli-darwin-amd64" => "chatcli"
+                end
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.intel?
+                url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-linux-amd64"
+                sha256 "${SHA_LINUX_AMD64}"
+
+                def install
+                  bin.install "chatcli-linux-amd64" => "chatcli"
+                end
+              end
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/chatcli --version 2>&1", 0)
+            end
+          end
+          FORMULA
+
+          # Remove leading whitespace from heredoc
+          sed -i 's/^          //' Formula/chatcli.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/chatcli.rb
+          git commit -m "chore: update chatcli formula to v${VER}"
+          git push
