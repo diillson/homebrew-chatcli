@@ -35,4 +35,4 @@ Features:
 - Multi-language support (English, Portuguese)
 - Session management and history
 
-For more information, visit [chatcli.diillson.com](https://chatcli.diillson.com).
+For more information, visit [chatcli.edilsonfreitas.com](https://chatcli.edilsonfreitas.com).
