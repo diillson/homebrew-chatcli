@@ -5,7 +5,7 @@
 # Repository: https://github.com/diillson/chatcli
 class Chatcli < Formula
   desc "Command-line interface for interacting with multiple LLM providers"
-  homepage "https://chatcli.ai"
+  homepage "https://chatcli.diillson.com"
   license "Apache-2.0"
   version "1.9.0"
 
