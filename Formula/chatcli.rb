@@ -7,19 +7,19 @@ class Chatcli < Formula
   desc "Command-line interface for interacting with multiple LLM providers"
   homepage "https://chatcli.edilsonfreitas.com"
   license "Apache-2.0"
-  version "1.112.2"
+  version "1.113.0"
 
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-darwin-arm64"
-      sha256 "1edb94101c24432cf2b7f0b279c469833c7ff3e17398d3123f50ef570ff07bd4"
+      sha256 "a0f558f61dc77d0c8bdec4940d5636f6ae9bcd21d3abc1a0059ccfe6eedd94ab"
 
       def install
         bin.install "chatcli-darwin-arm64" => "chatcli"
       end
     elsif Hardware::CPU.intel?
       url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-darwin-amd64"
-      sha256 "49e12876ed505839c977c16ef3eb49781b6cb59da81cdbe15bdfbe180331a758"
+      sha256 "c24081b25fa6adf122407aad668be29caf6d10403c7e661dd2e119711906deb8"
 
       def install
         bin.install "chatcli-darwin-amd64" => "chatcli"
@@ -30,7 +30,7 @@ class Chatcli < Formula
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/diillson/chatcli/releases/download/v#{version}/chatcli-linux-amd64"
-      sha256 "125485ac42b95c9f990d56aa8208458f4cc06266cada657e43ecdfe2c987771a"
+      sha256 "780f3fce63d2a151b74a843e826c00478293230e267bee452b25a4ec4a0c1c0a"
 
       def install
         bin.install "chatcli-linux-amd64" => "chatcli"
